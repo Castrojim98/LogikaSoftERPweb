@@ -17,6 +17,8 @@ const staticRoutes = [
   "/contacto",
 ];
 
+const legalRoutes = ["/politicas/privacidad", "/politicas/terminos"];
+
 export default function sitemap(): MetadataRoute.Sitemap {
   const now = new Date();
 
@@ -25,6 +27,13 @@ export default function sitemap(): MetadataRoute.Sitemap {
     lastModified: now,
     changeFrequency: route === "" ? "weekly" : "monthly",
     priority: route === "" ? 1 : 0.7,
+  }));
+
+  const legalEntries: MetadataRoute.Sitemap = legalRoutes.map((route) => ({
+    url: `${siteConfig.url}${route}`,
+    lastModified: now,
+    changeFrequency: "yearly",
+    priority: 0.3,
   }));
 
   const productEntries: MetadataRoute.Sitemap = products.map((product) => ({
@@ -41,5 +50,5 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.5,
   }));
 
-  return [...staticEntries, ...productEntries, ...blogEntries];
+  return [...staticEntries, ...legalEntries, ...productEntries, ...blogEntries];
 }

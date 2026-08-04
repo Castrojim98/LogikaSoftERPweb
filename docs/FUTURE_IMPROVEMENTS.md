@@ -126,9 +126,9 @@ timeline
 
 Consolidadas también en [MAINTENANCE.md](./MAINTENANCE.md), sección 8:
 
-- Implementar las páginas `/politicas/privacidad` y `/politicas/terminos` (hoy enlazadas desde el Footer pero inexistentes) — **priorizar antes de cualquier lanzamiento público real**, ya que son páginas legalmente relevantes y su ausencia genera enlaces rotos (404) visibles a cualquier visitante.
+- Hacer revisar por un abogado el contenido de `/politicas/privacidad` y `/politicas/terminos` (implementadas como plantilla profesional) antes de cualquier lanzamiento público real, y adaptarlo si LOGIKA SOFT empieza a operar con clientes sujetos a otras normativas (ej. GDPR).
 - Incorporar imágenes reales de productos, portafolio y blog (ver [PERFORMANCE.md](./PERFORMANCE.md) y [CMS.md](./CMS.md)).
-- Rate limiting y Content Security Policy (ver [SECURITY.md](./SECURITY.md)).
+- Content Security Policy (ver [SECURITY.md](./SECURITY.md); el rate limiting básico y las cabeceras de seguridad ya están implementados).
 - Pruebas automatizadas (ver [TESTING.md](./TESTING.md)).
 - Unificar la metadata de la página de Home con el helper `buildMetadata()` (ver [ROUTES.md](./ROUTES.md)).
 - Persistencia de los leads del formulario de contacto más allá del correo electrónico (ver sección 5 de este documento).

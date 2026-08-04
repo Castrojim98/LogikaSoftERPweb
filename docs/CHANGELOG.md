@@ -8,7 +8,13 @@ El formato sigue las convenciones de [Keep a Changelog](https://keepachangelog.c
 
 ## [Sin publicar]
 
+### Añadido
+- Páginas `/politicas/privacidad` y `/politicas/terminos`, enlazadas desde el Footer (antes devolvían 404), incluidas en `app/sitemap.ts`.
+- Cabeceras HTTP de seguridad (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`) en `next.config.ts`.
+- Rate limiting en memoria (5 solicitudes por IP cada 10 minutos) en la Server Action `submitContactForm`, vía `utils/rate-limit.ts`.
+
 ### Pendiente
+- Revisión legal formal del contenido de `/politicas/privacidad` y `/politicas/terminos` (redactado como plantilla profesional, no como asesoría legal certificada).
 - Ver la lista completa de deuda técnica y mejoras planificadas en [MAINTENANCE.md](./MAINTENANCE.md#8-deuda-técnica-conocida-a-resolver-cuando-se-priorice) y [FUTURE_IMPROVEMENTS.md](./FUTURE_IMPROVEMENTS.md).
 
 ## [0.1.0] — 2026-08-03

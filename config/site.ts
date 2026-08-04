@@ -18,9 +18,9 @@ export const siteConfig = {
   ],
   contact: {
     email: "contacto@logikasoft.com",
-    phone: "+57 300 000 0000",
-    whatsapp: "https://wa.me/573000000000",
-    address: "Mocoa, Putumayo, Colombia",
+    phone: "+57 313 481 9183",
+    whatsapp: "https://wa.me/573134819183",
+    address: "Orito, Putumayo, Colombia",
   },
   socials: {
     linkedin: "https://www.linkedin.com/company/logikasoft",

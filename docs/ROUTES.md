@@ -20,14 +20,14 @@ flowchart TB
     Root --> Faq["/faq"]
     Root --> Contacto["/contacto"]
 
-    Root -.enlace de footer.-> PolPriv["/politicas/privacidad *(no implementada)*"]
-    Root -.enlace de footer.-> PolTerm["/politicas/terminos *(no implementada)*"]
+    Root -.enlace de footer.-> PolPriv["/politicas/privacidad"]
+    Root -.enlace de footer.-> PolTerm["/politicas/terminos"]
 
     style ProductoDetalle stroke-dasharray: 3 3
     style Articulo stroke-dasharray: 3 3
 ```
 
-> **Nota:** el `Footer` (`config/site.ts → footerNav.legal`) enlaza a `/politicas/privacidad` y `/politicas/terminos`, pero estas rutas **no tienen página implementada todavía** — hoy resuelven en un 404. Ver el pendiente en [FUTURE_IMPROVEMENTS.md](./FUTURE_IMPROVEMENTS.md) y priorizarlo antes de un lanzamiento público real (son páginas legalmente relevantes).
+> El `Footer` (`config/site.ts → footerNav.legal`) enlaza a `/politicas/privacidad` y `/politicas/terminos`. Ambas páginas están implementadas (`app/(marketing)/politicas/privacidad/page.tsx` y `.../terminos/page.tsx`) e incluidas en `app/sitemap.ts` con `priority: 0.3` y `changeFrequency: "yearly"`. **Importante:** el contenido legal fue redactado como plantilla profesional siguiendo la Ley 1581 de 2012 y el Decreto 1377 de 2013 (Colombia); se recomienda que un abogado lo revise antes de un lanzamiento público, especialmente si LOGIKA SOFT empieza a operar con clientes internacionales sujetos a otras normativas (ej. GDPR).
 
 ## 2. Todas las rutas del grupo `(marketing)`
 
@@ -48,6 +48,8 @@ Todas comparten el layout `app/(marketing)/layout.tsx` (Header + `<main>` + Foot
 | `/blog/[slug]` | `app/(marketing)/blog/[slug]/page.tsx` | `●` SSG (3 rutas vía `generateStaticParams`) | `"{título del artículo} \| LOGIKA SOFT"` |
 | `/faq` | `app/(marketing)/faq/page.tsx` | `○` Estático | "Preguntas Frecuentes \| LOGIKA SOFT" |
 | `/contacto` | `app/(marketing)/contacto/page.tsx` | `○` Estático | "Contacto \| LOGIKA SOFT" |
+| `/politicas/privacidad` | `app/(marketing)/politicas/privacidad/page.tsx` | `○` Estático | "Política de Privacidad \| LOGIKA SOFT" |
+| `/politicas/terminos` | `app/(marketing)/politicas/terminos/page.tsx` | `○` Estático | "Términos y Condiciones \| LOGIKA SOFT" |
 
 > **Nota sobre `/`:** a diferencia de todas las demás páginas, `app/(marketing)/page.tsx` define su `metadata` como un objeto literal (`{ title: "Inicio", alternates: { canonical: "/" } }`) en lugar de usar el helper `buildMetadata()` (ver [SEO.md](./SEO.md)). Como el `title` del layout raíz usa la plantilla `"%s | LOGIKA SOFT"`, el resultado real en el navegador es **"Inicio | LOGIKA SOFT"**. Esto es funcionalmente correcto pero **inconsistente** con el resto de páginas (que sí usan `buildMetadata`, y por lo tanto también generan automáticamente Open Graph y Twitter Cards). Ver la recomendación de unificarlo en [MAINTENANCE.md](./MAINTENANCE.md).
 
@@ -133,6 +135,13 @@ Todas comparten el layout `app/(marketing)/layout.tsx` (Header + `<main>` + Foot
 
 - **Componentes:** `ContactForm` (Client Component — React Hook Form + Zod + Server Action), lista de canales de contacto (correo, teléfono, WhatsApp, ubicación), mapa embebido de OpenStreetMap (`<iframe>`).
 - **Server Action invocada:** `submitContactForm` (`app/actions/contact.ts`) — ver [API.md](./API.md).
+
+### `/politicas/privacidad` y `/politicas/terminos`
+
+- **Componentes:** contenido legal renderizado como `<article className="prose ...">` (misma clase de tipografiado que el artículo de blog, ver [DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)), dentro de un `Section` con `containerClassName="max-w-3xl"`.
+- **Contenido:** texto fijo dentro del propio archivo de la página (igual que `/empresa`), interpolando datos de `siteConfig` (`legalName`, dirección, correo, teléfono) para que un cambio de datos de contacto en `config/site.ts` se refleje automáticamente en ambos documentos legales.
+- **Origen del contenido:** plantilla redactada siguiendo la Ley 1581 de 2012 y el Decreto 1377 de 2013 (Colombia). **No reemplaza asesoría legal** — revisar con un abogado antes de un lanzamiento público, especialmente si LOGIKA SOFT opera con clientes sujetos a otras normativas de protección de datos (ej. GDPR).
+- **Enlazadas desde:** `footerNav.legal` (`config/site.ts`) y, cruzadamente, los Términos enlazan a la Política de Privacidad en su sección 9.
 
 ---
 
