@@ -60,24 +60,31 @@ Las **Server Actions de Next.js incluyen protección CSRF nativa**: el framework
 
 ## 6. Rate limiting
 
-**No implementado en esta versión.** El endpoint generado por `submitContactForm` no tiene actualmente ningún límite de frecuencia de invocación por IP/usuario, lo que lo expone a:
+**Estado actual: implementado (versión en memoria).** `utils/rate-limit.ts` expone `checkRateLimit(key)`: un limitador de ventana fija (5 solicitudes por IP cada 10 minutos) sin dependencias externas. `app/actions/contact.ts` lo invoca como primer paso de `submitContactForm`, **antes** de la validación de Zod, usando la IP del remitente (`x-forwarded-for` / `x-real-ip`, leídas con `headers()` de `next/headers`):
 
-- Spam del formulario de contacto (envíos automatizados repetidos).
-- Abuso del cupo de envío de la cuenta de Resend.
+```ts
+const ip = await getClientIp();
+const { allowed, retryAfterSeconds } = checkRateLimit(ip);
 
-**Recomendación de implementación futura** (priorizar antes de un lanzamiento con tráfico significativo):
+if (!allowed) {
+  return { success: false, message: `Has enviado demasiadas solicitudes. Intenta de nuevo en ${minutos} minuto(s).` };
+}
+```
 
-- **Opción simple (sin infraestructura adicional):** usar el *rate limiting* nativo de Vercel (si se despliega ahí) a nivel de Edge, o un middleware de Next.js (`middleware.ts`) con un almacén en memoria/KV (Vercel KV, Upstash Redis) que limite, por ejemplo, a 5 envíos por IP cada 10 minutos.
-- **Opción adicional recomendada:** agregar un CAPTCHA invisible (Cloudflare Turnstile o similar) en el formulario de contacto antes de invocar la Server Action, especialmente si se detecta spam real en producción.
+Verificado manualmente: al enviar el formulario 6 veces consecutivas desde el mismo origen, las primeras 5 se procesan normalmente y la 6ª devuelve el mensaje de límite excedido.
 
-Ver este punto priorizado en [FUTURE_IMPROVEMENTS.md](./FUTURE_IMPROVEMENTS.md).
+**Limitación conocida y aceptada de esta implementación:** el estado vive en un `Map` en memoria del proceso de Node.js (`utils/rate-limit.ts`), por lo que:
+- Se reinicia en cada despliegue/reinicio del servidor.
+- **No** se comparte entre múltiples instancias/réplicas (por ejemplo, varias funciones serverless de Vercel en paralelo) — cada instancia lleva su propio contador, lo que en la práctica multiplica el límite efectivo por el número de instancias activas.
+
+**Mejora futura recomendada** si el sitio recibe tráfico alto o spam real: migrar `checkRateLimit` a un almacén compartido (Vercel KV, Upstash Redis) sin cambiar la firma de la función — el resto del código (`contact.ts`) no necesitaría modificarse. Considerar también un CAPTCHA invisible (Cloudflare Turnstile) como capa adicional. Ver [FUTURE_IMPROVEMENTS.md](./FUTURE_IMPROVEMENTS.md).
 
 ## 7. Cabeceras HTTP de seguridad
 
-**Estado actual:** el proyecto **no define cabeceras de seguridad personalizadas** todavía (no hay bloque `headers()` en `next.config.ts`). Next.js ya envía algunas cabeceras razonables por defecto, pero se recomienda añadir explícitamente las siguientes antes de un lanzamiento público:
+**Estado actual: implementado.** `next.config.ts` define un bloque `headers()` que aplica las siguientes cabeceras a todas las rutas (`source: "/:path*"`):
 
 ```ts
-// next.config.ts (propuesta — no implementado aún)
+// next.config.ts
 import type { NextConfig } from "next";
 
 const securityHeaders = [
@@ -99,6 +106,8 @@ const nextConfig: NextConfig = {
 
 export default nextConfig;
 ```
+
+Verificado con `curl -D -` contra el servidor de desarrollo: las 5 cabeceras se envían correctamente en todas las rutas.
 
 ### 7.1. Content Security Policy (CSP)
 
@@ -149,10 +158,9 @@ El campo `replyTo: email` usa el correo que el propio remitente escribió en el 
 
 | Riesgo | Severidad | Mitigación actual | Acción recomendada |
 |---|---|---|---|
-| Sin rate limiting en el formulario de contacto | Media | Ninguna | Implementar antes de tráfico alto (sección 6) |
-| Sin CSP | Media | Escapado automático de React + `text` plano en correos | Implementar y probar exhaustivamente (sección 7.1) |
+| Rate limiting solo en memoria, no distribuido | Baja–Media | `utils/rate-limit.ts`, 5 solicitudes/IP/10 min (sección 6) | Migrar a Vercel KV/Upstash Redis si se despliegan múltiples instancias |
+| Sin CSP | Media | Escapado automático de React + `text` plano en correos + cabeceras básicas ya activas (sección 7) | Implementar y probar exhaustivamente (sección 7.1) |
 | Correo de contacto sin verificación de remitente | Baja | `replyTo` usa el correo ingresado, sin verificar | Aceptado; monitorear abuso |
-| Sin cabeceras `HSTS`/`X-Frame-Options` explícitas | Baja–Media | Depende de la plataforma de despliegue (Vercel añade algunas por defecto) | Añadir explícitamente en `next.config.ts` (sección 7) |
 
 ## 11. Checklist de seguridad antes de una nueva funcionalidad
 

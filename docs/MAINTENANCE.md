@@ -144,7 +144,7 @@ Consolidado desde el resto de la documentación, para tener un solo lugar de ref
 | Metadata de Home inconsistente | `/` define `metadata` como objeto literal en lugar de usar `buildMetadata()`, por lo que no genera Open Graph/Twitter Cards propios | [ROUTES.md](./ROUTES.md), [SEO.md](./SEO.md) |
 | Sin imágenes reales | Todos los productos/portafolio/blog usan `ProductVisual` (placeholder degradado) en lugar de `next/image` | [PERFORMANCE.md](./PERFORMANCE.md), [CMS.md](./CMS.md) |
 | Rutas `/politicas/privacidad` y `/politicas/terminos` sin implementar | Enlazadas desde el Footer pero devuelven 404 | [ROUTES.md](./ROUTES.md) |
-| Sin rate limiting en el formulario de contacto | Ver mitigación propuesta | [SECURITY.md](./SECURITY.md) |
+| Rate limiting solo en memoria, no distribuido | Implementado (`utils/rate-limit.ts`), pero no comparte estado entre instancias; migrar a Redis/KV si se escala | [SECURITY.md](./SECURITY.md) |
 | Sin Content Security Policy | Requiere pruebas exhaustivas antes de implementar | [SECURITY.md](./SECURITY.md) |
 | Sin `output: "standalone"` en `next.config.ts` | Requerido únicamente si se despliega con Docker | [DEPLOYMENT.md](./DEPLOYMENT.md) |
 | Sin pruebas automatizadas | Solo verificación manual por ahora | [TESTING.md](./TESTING.md) |

@@ -1,10 +1,30 @@
 "use server";
 
+import { headers } from "next/headers";
 import { contactFormSchema, type ContactFormResult, type ContactFormValues } from "@/features/contact/schema";
 import { getResendClient } from "@/services/resend";
 import { siteConfig } from "@/config/site";
+import { checkRateLimit } from "@/utils/rate-limit";
+
+async function getClientIp(): Promise<string> {
+  const headerList = await headers();
+  const forwardedFor = headerList.get("x-forwarded-for");
+  if (forwardedFor) return forwardedFor.split(",")[0].trim();
+  return headerList.get("x-real-ip") ?? "unknown";
+}
 
 export async function submitContactForm(values: ContactFormValues): Promise<ContactFormResult> {
+  const ip = await getClientIp();
+  const { allowed, retryAfterSeconds } = checkRateLimit(ip);
+
+  if (!allowed) {
+    const minutes = Math.max(1, Math.ceil(retryAfterSeconds / 60));
+    return {
+      success: false,
+      message: `Has enviado demasiadas solicitudes. Intenta de nuevo en ${minutes} minuto(s).`,
+    };
+  }
+
   const parsed = contactFormSchema.safeParse(values);
 
   if (!parsed.success) {
