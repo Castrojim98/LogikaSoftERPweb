@@ -2,22 +2,23 @@
 
 ## 1. Filosofía
 
-El proyecto sigue el principio de **configuración mínima por variables de entorno**: solo existe una variable de entorno actualmente, porque casi todo el contenido y la configuración del sitio son datos versionados en el código (`config/site.ts`), no secretos. Esto reduce la superficie de configuración y el riesgo de desincronización entre entornos.
+El proyecto sigue el principio de **configuración mínima por variables de entorno**: solo existen dos variables de entorno actualmente, porque casi todo el contenido y la configuración del sitio son datos versionados en el código (`config/site.ts`), no secretos. Esto reduce la superficie de configuración y el riesgo de desincronización entre entornos.
 
 Toda variable de entorno debe:
 
 1. Declararse en `.env.example` (con el nombre, sin el valor real).
 2. Documentarse en este archivo.
-3. Nunca commitearse con un valor real en ningún archivo `.env*` (todos están en `.gitignore`).
+3. Nunca escribirse con un valor real en `.env.example` — los valores reales van **solo** en `.env.local` (o el panel de variables de entorno de la plataforma de despliegue), que sí están en `.gitignore`.
 4. Leerse **solo** en código que corre en el servidor (Server Components, Server Actions, `services/`), nunca en un Client Component, salvo que se prefije explícitamente con `NEXT_PUBLIC_` y se asuma que su valor será público.
 
 ## 2. Archivo de referencia: `.env.example`
 
 ```env
 RESEND_API_KEY=
+CONTACT_RECIPIENT_EMAIL=
 ```
 
-Este archivo **sí** se commitea al repositorio (sirve de plantilla). Para configurar el entorno local:
+Este archivo **sí** se commitea al repositorio (sirve de plantilla, sin valores reales). El `.gitignore` tiene una regla explícita (`.env*` seguida de `!.env.example`) que ignora cualquier archivo `.env.local`/`.env.production`/etc. pero deja `.env.example` fuera de esa exclusión, precisamente para que sea el único archivo `.env*` que se versiona. Para configurar el entorno local:
 
 ```bash
 cp .env.example .env.local
@@ -34,7 +35,7 @@ cp .env.example .env.local
 | **Dónde se lee** | `services/resend.ts` → `getResendClient()` |
 | **Dónde se usa** | `app/actions/contact.ts` → `submitContactForm()` |
 | **Formato esperado** | `re_xxxxxxxxxxxxxxxxxxxxxxxx` |
-| **Cómo obtenerla** | Crear una cuenta en [resend.com](https://resend.com) → verificar el dominio de envío (`logikasoft.com`, agregando los registros DNS SPF/DKIM que Resend indica) → **API Keys** → **Create API Key**. |
+| **Cómo obtenerla** | Crear una cuenta en [resend.com](https://resend.com) → **API Keys** → **Create API Key**. **No requiere un dominio verificado para empezar a enviar** — ver la nota sobre `onboarding@resend.dev` más abajo. |
 | **Alcance recomendado** | Crear la key con permiso de **Sending access** únicamente (no *Full access*), limitando el daño potencial si la key se filtra. |
 | **Comportamiento si falta** | `getResendClient()` retorna `null`. La Server Action detecta esto, registra un error en el log del servidor (`console.error`) y devuelve `{ success: false, message: "No pudimos enviar tu mensaje..." }` al formulario — **el sitio no se rompe**, solo el envío de correo queda deshabilitado. |
 
@@ -48,6 +49,19 @@ export function getResendClient() {
   return new Resend(apiKey);
 }
 ```
+
+> **Remitente sin dominio propio verificado:** mientras LOGIKA SOFT no tenga un dominio verificado en Resend, `app/actions/contact.ts` envía los correos desde `onboarding@resend.dev` (el dominio de pruebas que Resend habilita sin ninguna configuración adicional). Cuando se verifique `logikasoft.com` en el panel de Resend (agregando los registros DNS SPF/DKIM que indique), cambiar ese `from` en `app/actions/contact.ts` a una dirección del dominio propio, por ejemplo `notificaciones@logikasoft.com`.
+
+### `CONTACT_RECIPIENT_EMAIL`
+
+| | |
+|---|---|
+| **Tipo** | Configuración (string, dirección de correo) |
+| **Obligatoria** | No. Si no se define, el destinatario es `siteConfig.contact.email` (el correo público del sitio, `contacto@logikasoft.com`). |
+| **Dónde se lee** | `app/actions/contact.ts` → `submitContactForm()`, directamente vía `process.env.CONTACT_RECIPIENT_EMAIL` |
+| **Para qué sirve** | Permite recibir las solicitudes del formulario de contacto en un correo distinto al que se muestra públicamente en el sitio (Footer, `/contacto`) — por ejemplo, un correo personal, mientras la empresa no tenga un buzón real funcionando para `contacto@logikasoft.com`. |
+| **Ejemplo** | `CONTACT_RECIPIENT_EMAIL=tu-correo-personal@gmail.com` |
+| **Cuándo quitarla** | En cuanto exista un buzón real detrás de `contacto@logikasoft.com` (o el correo que se decida usar públicamente), eliminar esta variable del entorno de producción — las solicitudes volverán a llegar automáticamente al correo público, sin tocar código. |
 
 ## 4. Dónde configurar cada variable según el entorno
 

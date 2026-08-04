@@ -43,9 +43,16 @@ export async function submitContactForm(values: ContactFormValues): Promise<Cont
   }
 
   try {
+    // Mientras no exista un dominio verificado en Resend, se envía desde su
+    // dominio de pruebas (onboarding@resend.dev). El destinatario es
+    // configurable vía CONTACT_RECIPIENT_EMAIL para poder recibir las
+    // solicitudes en un correo personal sin cambiar el correo público del
+    // sitio (siteConfig.contact.email). Ver ENVIRONMENT_VARIABLES.md.
+    const recipient = process.env.CONTACT_RECIPIENT_EMAIL || siteConfig.contact.email;
+
     await resend.emails.send({
-      from: `${siteConfig.name} <notificaciones@logikasoft.com>`,
-      to: siteConfig.contact.email,
+      from: `${siteConfig.name} <onboarding@resend.dev>`,
+      to: recipient,
       replyTo: email,
       subject: `Nueva solicitud de cotización — ${name}`,
       text: [
