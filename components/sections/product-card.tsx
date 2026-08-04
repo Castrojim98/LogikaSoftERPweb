@@ -19,7 +19,7 @@ const statusTone: Record<Product["status"], "available" | "beta" | "upcoming"> =
 export function ProductCard({ product }: { product: Product }) {
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border-subtle bg-surface shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-xl hover:shadow-brand-900/10">
-      <ProductVisual name={product.name} className="h-44" />
+      <ProductVisual name={product.name} image={product.image} className="h-44" />
       <div className="flex flex-1 flex-col p-6">
         <div className="mb-3 flex items-center justify-between gap-2">
           <span className="text-xs font-semibold uppercase tracking-wide text-brand-500 dark:text-brand-300">

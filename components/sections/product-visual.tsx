@@ -1,7 +1,29 @@
+import Image from "next/image";
 import { Boxes } from "lucide-react";
 import { cn } from "@/utils/cn";
 
-export function ProductVisual({ name, className }: { name: string; className?: string }) {
+// Las rutas con "placeholder" en products.ts marcan productos sin foto real todavía.
+function isRealImage(image?: string): image is string {
+  return Boolean(image) && !image!.includes("placeholder");
+}
+
+export function ProductVisual({
+  name,
+  image,
+  className,
+}: {
+  name: string;
+  image?: string;
+  className?: string;
+}) {
+  if (isRealImage(image)) {
+    return (
+      <div className={cn("relative overflow-hidden rounded-t-2xl", className)}>
+        <Image src={image} alt={name} fill className="object-cover" />
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(

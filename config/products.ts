@@ -62,7 +62,7 @@ export const products: Product[] = [
     tagline: "Punto de venta rápido y conectado a tu inventario",
     description:
       "Sistema de punto de venta pensado para comercio y retail, con facturación electrónica y sincronización de inventario en tiempo real.",
-    image: "/images/products/placeholder-pos.svg",
+    image: "/images/products/pos.png",
     status: "disponible",
     category: "Punto de Venta",
     features: ["Ventas rápidas en mostrador", "Control de caja", "Facturación electrónica", "Multi-sucursal"],

@@ -81,7 +81,7 @@ export default async function ProductoPage({ params }: { params: Promise<{ slug:
             </Button>
           </FadeIn>
           <FadeIn delay={0.15}>
-            <ProductVisual name={product.name} className="h-72 rounded-3xl" />
+            <ProductVisual name={product.name} image={product.image} className="h-72 rounded-3xl" />
           </FadeIn>
         </div>
       </Section>
