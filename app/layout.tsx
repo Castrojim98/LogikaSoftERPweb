@@ -45,7 +45,7 @@ const organizationJsonLd = {
   name: siteConfig.legalName,
   alternateName: siteConfig.name,
   url: siteConfig.url,
-  logo: `${siteConfig.url}/images/logos/logo.svg`,
+  logo: `${siteConfig.url}/images/logos/logo.png`,
   description: siteConfig.description,
   address: {
     "@type": "PostalAddress",
