@@ -31,14 +31,16 @@ flowchart LR
 
 | Campo | Regla |
 |---|---|
-| `name` | string, 2–100 caracteres |
+| `name` | string, 2–100 caracteres, sin caracteres de control (`\r`, `\n`, etc.) |
 | `email` | formato de correo válido (`z.email()`) |
-| `company` | opcional, máx. 100 caracteres |
-| `phone` | opcional, máx. 30 caracteres |
-| `serviceInterest` | string no vacío (selección de una lista cerrada en la UI) |
-| `message` | 10–2000 caracteres |
+| `company` | opcional, máx. 100 caracteres, sin caracteres de control |
+| `phone` | opcional, máx. 30 caracteres, sin caracteres de control |
+| `serviceInterest` | string no vacío, sin caracteres de control (selección de una lista cerrada en la UI) |
+| `message` | 10–2000 caracteres (sí permite saltos de línea: es el cuerpo del correo, no un encabezado) |
 
 Los límites máximos de longitud (`max()`) existen específicamente para evitar payloads anormalmente grandes que pudieran usarse para saturar el servicio de correo o abusar del envío de datos.
+
+**Protección contra inyección de encabezados de correo (header injection):** `name` se interpola directamente en el asunto del correo (`app/actions/contact.ts` → `subject: \`Nueva solicitud de cotización — ${name}\``). Sin restricción de caracteres, un `name` con `\r\n` podría intentar inyectar encabezados adicionales (por ejemplo, un `Bcc:` oculto) si el proveedor de correo no sanitizara el campo por su cuenta. Por eso `name`, `company`, `phone` y `serviceInterest` (los campos más cercanos a encabezados) rechazan cualquier carácter de control mediante la expresión regular `/^[^\x00-\x1F\x7F]*$/` en el esquema de Zod — una capa de defensa propia que no depende de que Resend sanitice internamente.
 
 ## 3. Protección contra XSS (Cross-Site Scripting)
 
@@ -72,6 +74,8 @@ if (!allowed) {
 ```
 
 Verificado manualmente: al enviar el formulario 6 veces consecutivas desde el mismo origen, las primeras 5 se procesan normalmente y la 6ª devuelve el mensaje de límite excedido.
+
+`checkRateLimit` purga automáticamente las entradas vencidas del `Map` como máximo una vez por ventana (cada 10 minutos), controlado por una marca de tiempo `lastCleanup` a nivel de módulo — esto evita que el `Map` crezca sin límite mientras el proceso esté vivo (la función `cleanupExpiredEntries()` existe desde el inicio, pero originalmente no se invocaba desde ningún lado; quedó corregido).
 
 **Limitación conocida y aceptada de esta implementación:** el estado vive en un `Map` en memoria del proceso de Node.js (`utils/rate-limit.ts`), por lo que:
 - Se reinicia en cada despliegue/reinicio del servidor.

@@ -8,6 +8,8 @@ const attempts = new Map<string, RateLimitEntry>();
 const WINDOW_MS = 10 * 60 * 1000;
 const MAX_REQUESTS = 5;
 
+let lastCleanup = Date.now();
+
 /**
  * Limitador en memoria (sin dependencias externas). Suficiente para un único
  * proceso de servidor; se reinicia en cada despliegue/reinicio y no comparte
@@ -16,6 +18,14 @@ const MAX_REQUESTS = 5;
  */
 export function checkRateLimit(key: string): { allowed: boolean; retryAfterSeconds: number } {
   const now = Date.now();
+
+  // Purga entradas vencidas como máximo una vez por ventana, para que el Map
+  // no crezca indefinidamente mientras el proceso esté vivo.
+  if (now - lastCleanup > WINDOW_MS) {
+    cleanupExpiredEntries();
+    lastCleanup = now;
+  }
+
   const entry = attempts.get(key);
 
   if (!entry || now > entry.resetAt) {

@@ -13,6 +13,11 @@ El formato sigue las convenciones de [Keep a Changelog](https://keepachangelog.c
 - Cabeceras HTTP de seguridad (`X-Content-Type-Options`, `X-Frame-Options`, `Referrer-Policy`, `Permissions-Policy`, `Strict-Transport-Security`) en `next.config.ts`.
 - Rate limiting en memoria (5 solicitudes por IP cada 10 minutos) en la Server Action `submitContactForm`, vía `utils/rate-limit.ts`.
 
+### Corregido
+- Validación de `name`, `company`, `phone` y `serviceInterest` en `features/contact/schema.ts` para rechazar caracteres de control (`\r`, `\n`), cerrando un vector de inyección de encabezados de correo en el asunto del mensaje.
+- `utils/rate-limit.ts`: `cleanupExpiredEntries()` ahora se invoca automáticamente (máx. una vez por ventana de 10 minutos) desde `checkRateLimit()`; antes existía pero nunca se llamaba, permitiendo que el `Map` en memoria creciera sin límite.
+- Actualizadas `@hookform/resolvers`, `lucide-react`, `react-hook-form` y `resend` a sus últimas versiones menores, resolviendo una vulnerabilidad de severidad alta en `nanoid` (dependencia transitiva de `postcss`) reportada por `pnpm audit`.
+
 ### Pendiente
 - Revisión legal formal del contenido de `/politicas/privacidad` y `/politicas/terminos` (redactado como plantilla profesional, no como asesoría legal certificada).
 - Ver la lista completa de deuda técnica y mejoras planificadas en [MAINTENANCE.md](./MAINTENANCE.md#8-deuda-técnica-conocida-a-resolver-cuando-se-priorice) y [FUTURE_IMPROVEMENTS.md](./FUTURE_IMPROVEMENTS.md).
